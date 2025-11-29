@@ -1,23 +1,24 @@
-# Alpine Linux သုံးမယ် - China mirrors အတွက်ပိုကောင်းတယ်
-FROM php:8.2-fpm-alpine
+# Stable Debian version with China mirrors
+FROM php:8.2-fpm-bullseye
 
-# China mirrors for Alpine
-RUN echo "https://mirrors.ustc.edu.cn/alpine/v3.19/main" > /etc/apk/repositories && \
-    echo "https://mirrors.ustc.edu.cn/alpine/v3.19/community" >> /etc/apk/repositories
+# China mirrors for better connectivity in Myanmar
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list
 
 # System dependencies တွေ Install လုပ်မယ်
-RUN apk update && apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
-    oniguruma-dev \
+    libonig-dev \
     libxml2-dev \
     zip \
     unzip \
     libzip-dev \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    libwebp-dev
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libwebp-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # PHP Extensions တွေ Install လုပ်မယ်
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp
@@ -33,18 +34,17 @@ WORKDIR /var/www/html
 # Project files တွေ Copy ထည့်မယ်
 COPY . .
 
-# User နဲ့ Group ID တွေကိုညှိမယ် (Fixed Version)
-RUN apk add --no-cache shadow && \
-    usermod -u 1000 www-data && \
+# User နဲ့ Group ID တွေကိုညှိမယ်
+RUN usermod -u 1000 www-data && \
     groupmod -g 1000 www-data
 
 # Storage နဲ့ cache folders တွေကို owner ပြောင်းမယ်
-RUN chown -R www-data:www-data /var/www/html/storage
-RUN chown -R www-data:www-data /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/storage && \
+    chown -R www-data:www-data /var/www/html/bootstrap/cache
 
 # Permissions ပေးမယ်
-RUN chmod -R 775 /var/www/html/storage
-RUN chmod -R 775 /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage && \
+    chmod -R 775 /var/www/html/bootstrap/cache
 
 # Composer dependencies install လုပ်မယ်
 RUN composer install --no-dev --optimize-autoloader
