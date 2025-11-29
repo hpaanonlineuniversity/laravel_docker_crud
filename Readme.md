@@ -41,3 +41,7 @@ Notes:
     docker compose exec app php artisan make:migration create_products_table
     docker compose exec app php artisan make:model product
     docker compose exec app php artisan make:controller ProductController
+
+
+
+    https://www.youtube.com/watch?v=yMTY-QlYUQM
